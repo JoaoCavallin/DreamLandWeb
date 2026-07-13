@@ -1,0 +1,64 @@
+@model IEnumerable<DreamLandWEB.Models.Produto>
+@using DreamLandWEB.Enums>
+@using DreamLandWEB.Helpers>
+
+@{
+    ViewData["Title"] = "Produtos";
+}
+
+<h1 class="mb-4">Nossos Produtos</h1>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-3">
+        <select name="categoria" class="form-select" asp-items="Html.GetEnumSelectList<CategoriaProduto>()">
+            <option value="">Todas as categorias</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="condicao" class="form-select" asp-items="Html.GetEnumSelectList<CondicaoProduto>()">
+            <option value="">Todas as condições</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <input type="text" name="busca" class="form-control" placeholder="Buscar por nome..." value="@ViewBag.Busca" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Nenhum produto encontrado com esses filtros.</p>
+}
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+    @foreach (var produto in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                @if (!string.IsNullOrEmpty(produto.ImagemUrl))
+                {
+                    <img src="@produto.ImagemUrl" class="card-img-top" alt="@produto.Nome" style="height:200px; object-fit:cover;" />
+                }
+                else
+                {
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height:200px;">
+                        <span class="text-muted">Sem imagem</span>
+                    </div>
+                }
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@produto.Nome</h5>
+                    <p class="card-text text-muted mb-1">
+                        @produto.Categoria.GetDisplayName() &middot; Tam. @produto.Tamanho
+                    </p>
+                    <p class="card-text mb-1">
+                        <span class="badge bg-secondary">@produto.Condicao.GetDisplayName()</span>
+                    </p>
+                    <p class="card-text fw-bold fs-5 mt-auto">R$ @produto.Preco.ToString("F2")</p>
+                    <a asp-action="Details" asp-route-id="@produto.Id" class="btn btn-outline-primary mt-2">Ver Detalhes</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

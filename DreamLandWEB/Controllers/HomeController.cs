@@ -1,21 +1,33 @@
-using System.Diagnostics;
+using DreamLandWEB.Data;
+using DreamLandWEB.Enums;
 using DreamLandWEB.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace DreamLandWEB.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CategoriaProduto? categoria)
         {
-            return View();
+            var produtos = _context.Produtos
+                .Where(p => p.Disponivel && p.Estoque > 0)
+                .AsQueryable();
+
+            if (categoria.HasValue)
+                produtos = produtos.Where(p => p.Categoria == categoria.Value);
+
+            ViewBag.CategoriaSelecionada = categoria;
+
+            return View(await produtos.OrderByDescending(p => p.DataCadastro).ToListAsync());
         }
 
         public IActionResult Privacy()
