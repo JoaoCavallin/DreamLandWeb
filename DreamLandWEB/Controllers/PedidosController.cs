@@ -1,12 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using DreamLandWEB.Data;
+using DreamLandWEB.Helpers;
+using DreamLandWEB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using DreamLandWEB.Data;
-using DreamLandWEB.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace DreamLandWEB.Controllers
 {
@@ -159,6 +162,108 @@ namespace DreamLandWEB.Controllers
         private bool PedidoExists(int id)
         {
             return _context.Pedidos.Any(e => e.Id == id);
+        }
+
+        private const string CarrinhoSessionKey = "Carrinho";
+
+        // GET: /Pedido/Checkout — tela de confirmação antes de finalizar
+        [Authorize]
+        public IActionResult Checkout()
+        {
+            var carrinho = HttpContext.Session.GetObject<List<CarrinhoItem>>(CarrinhoSessionKey)
+                           ?? new List<CarrinhoItem>();
+
+            if (!carrinho.Any())
+            {
+                TempData["Erro"] = "Seu carrinho está vazio.";
+                return RedirectToAction("Index", "Carrinho");
+            }
+
+            ViewBag.Total = carrinho.Sum(i => i.Subtotal);
+            return View(carrinho);
+        }
+
+        // POST: /Pedido/ConfirmarCheckout — cria o Pedido de fato
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmarCheckout()
+        {
+            var carrinho = HttpContext.Session.GetObject<List<CarrinhoItem>>(CarrinhoSessionKey)
+                           ?? new List<CarrinhoItem>();
+
+            if (!carrinho.Any())
+            {
+                TempData["Erro"] = "Seu carrinho está vazio.";
+                return RedirectToAction("Index", "Carrinho");
+            }
+
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // Revalida estoque antes de confirmar (evita corrida entre dois clientes)
+            foreach (var item in carrinho)
+            {
+                var produto = await _context.Produtos.FindAsync(item.ProdutoId);
+                if (produto == null || !produto.Disponivel || produto.Estoque < item.Quantidade)
+                {
+                    TempData["Erro"] = $"O produto '{item.Nome}' não está mais disponível na quantidade desejada.";
+                    return RedirectToAction("Index", "Carrinho");
+                }
+            }
+
+            var pedido = new Pedido
+            {
+                UsuarioId = usuarioId,
+                Data = DateTime.Now,
+                Status = "Pendente",
+                Total = carrinho.Sum(i => i.Subtotal),
+                Itens = new List<ItemPedido>()
+            };
+
+            foreach (var item in carrinho)
+            {
+                pedido.Itens.Add(new ItemPedido
+                {
+                    ProdutoId = item.ProdutoId,
+                    Quantidade = item.Quantidade,
+                    PrecoUnitario = item.Preco
+                });
+
+                // Reduz o estoque
+                var produto = await _context.Produtos.FindAsync(item.ProdutoId);
+                produto!.Estoque -= item.Quantidade;
+                if (produto.Estoque == 0)
+                    produto.Disponivel = false;
+            }
+
+            _context.Pedidos.Add(pedido);
+            await _context.SaveChangesAsync();
+
+            // Limpa o carrinho
+            HttpContext.Session.Remove(CarrinhoSessionKey);
+
+            return RedirectToAction("Confirmacao", new { id = pedido.Id });
+        }
+
+        // GET: /Pedido/Confirmacao/5
+        [Authorize]
+        public async Task<IActionResult> Confirmacao(int id)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.Itens)
+                .ThenInclude(i => i.Produto)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pedido == null) return NotFound();
+
+            // Garante que o usuário só veja o próprio pedido (a menos que seja admin)
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var isAdmin = User.FindFirstValue("Admin") == "True";
+
+            if (pedido.UsuarioId != usuarioId && !isAdmin)
+                return Forbid();
+
+            return View(pedido);
         }
     }
 }

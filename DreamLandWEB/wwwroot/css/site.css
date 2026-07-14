@@ -131,7 +131,7 @@ h1, h2, h3, h4, .dl-titulo {
 }
 
 /* ===== Botões ===== */
-.btn-primary {
+/*.btn-primary {
     background-color: var(--dl-rosa-profundo);
     border-color: var(--dl-rosa-profundo);
     border-radius: 14px;
@@ -141,7 +141,7 @@ h1, h2, h3, h4, .dl-titulo {
     .btn-primary:hover {
         background-color: var(--dl-azul-profundo);
         border-color: var(--dl-azul-profundo);
-    }
+    }*/
 
 .btn-outline-primary {
     color: var(--dl-rosa-profundo);
@@ -151,8 +151,9 @@ h1, h2, h3, h4, .dl-titulo {
 }
 
     .btn-outline-primary:hover {
-        background-color: var(--dl-rosa-profundo);
-        border-color: var(--dl-rosa-profundo);
+        color: var(--dl-azul-profundo);
+        background-color: transparent;
+        border-color: var(--dl-azul-profundo);
     }
 
 .form-select, .form-control {
@@ -163,4 +164,27 @@ h1, h2, h3, h4, .dl-titulo {
     .form-select:focus, .form-control:focus {
         border-color: var(--dl-rosa-profundo);
         box-shadow: 0 0 0 0.2rem rgba(201, 124, 130, 0.15);
+    }
+
+/*botao sair*/
+
+.dl-logout-link {
+    border: none;
+    background: none;
+    color: var(--dl-texto);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+}
+
+    .dl-logout-link:hover {
+        color: var(--dl-rosa-profundo);
+    }
+
+    .dl-logout-link:focus,
+    .dl-logout-link:active,
+    .dl-logout-link:focus-visible {
+        outline: none;
+        box-shadow: none;
+        color: var(--dl-rosa-profundo);
     }

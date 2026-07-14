@@ -1,0 +1,42 @@
+@model DreamLandWEB.Models.Pedido
+
+@{
+    ViewData["Title"] = "Pedido Confirmado";
+}
+
+<div class="text-center mb-4">
+    <h1 class="dl-titulo">Pedido Confirmado! 🎉</h1>
+    <p class="text-muted">Pedido #@Model.Id — Status: @Model.Status</p>
+</div>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Preço Unit.</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Itens)
+            {
+                <tr>
+                    <td>@item.Produto?.Nome</td>
+                    <td>@item.Quantidade</td>
+                    <td>R$ @item.PrecoUnitario.ToString("F2")</td>
+                    <td>R$ @((item.PrecoUnitario * item.Quantidade).ToString("F2"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="text-end">
+    <h4>Total: R$ @Model.Total.ToString("F2")</h4>
+</div>
+
+<div class="text-center mt-4">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Voltar à Loja</a>
+</div>

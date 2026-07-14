@@ -1,0 +1,40 @@
+@model List<DreamLandWEB.Models.CarrinhoItem>
+
+@{
+    ViewData["Title"] = "Finalizar Compra";
+}
+
+<h1 class="dl-titulo mb-4">Confirmar Pedido</h1>
+
+<div class="table-responsive mb-4">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Tamanho</th>
+                <th>Quantidade</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Nome</td>
+                    <td>@item.Tamanho</td>
+                    <td>@item.Quantidade</td>
+                    <td>R$ @item.Subtotal.ToString("F2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="text-end mb-4">
+    <h4>Total: R$ @ViewBag.Total.ToString("F2")</h4>
+</div>
+
+<form asp-action="ConfirmarCheckout" method="post" class="text-end">
+    <a asp-controller="Carrinho" asp-action="Index" class="btn btn-outline-primary">Voltar ao Carrinho</a>
+    <button type="submit" class="btn btn-primary">Confirmar Pedido</button>
+</form>
